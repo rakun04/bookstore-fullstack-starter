@@ -1,7 +1,7 @@
 import { ApiResponse, Banner, Book, Category, BookSearchParams, CategoryParams } from '@/types/api';
 
 // API Base URL - Configure this in your environment variables
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/v1';
 
 // Helper function for API requests
 async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> {

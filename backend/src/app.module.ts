@@ -1,14 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { APP_GUARD } from '@nestjs/core';
 import { join } from 'path';
 
 // Modules
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { BooksModule } from './books/books.module';
+import { BannersModule } from './banners/banners.module';
 import { CategoriesModule } from './categories/categories.module';
 import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
@@ -52,6 +54,7 @@ import { UtilsModule } from './utils/utils.module';
     AuthModule,
     UsersModule,
     BooksModule,
+    BannersModule,
     CategoriesModule,
     CartModule,
     OrdersModule,
@@ -60,6 +63,12 @@ import { UtilsModule } from './utils/utils.module';
     NotificationsModule,
     AdminModule,
     UtilsModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

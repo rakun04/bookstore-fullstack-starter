@@ -1,4 +1,4 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
@@ -9,7 +9,6 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
-import { ThrottlerGuard } from '@nestjs/throttler';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -56,9 +55,6 @@ async function bootstrap() {
     new LoggingInterceptor(),
     new TransformInterceptor(),
   );
-
-  // Rate limiting
-  app.useGlobalGuards(new ThrottlerGuard());
 
   // API prefix
   app.setGlobalPrefix('v1');

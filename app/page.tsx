@@ -12,7 +12,6 @@ import { FeaturedBooksSkeleton } from "@/components/ui/skeletons/FeaturedBooksSk
 import { FlashSaleSkeleton } from "@/components/ui/skeletons/FlashSaleSkeleton";
 import { getBanners, getCategories, getFeaturedBooks, getFlashSaleBooks } from '@/lib/api';
 import { Banner, Category, Book } from '@/types/api';
-import { SiteHeader } from '@/components/site-header';
 
 // Generate metadata for SEO
 export const metadata: Metadata = {
@@ -93,9 +92,6 @@ export default async function HomePage() {
           flashSaleBooks: flashSaleBooksError,
         }}
       />
-
-      {/* Site Header */}
-      <SiteHeader />
 
       {/* Hero Section */}
       <section className="mb-8">

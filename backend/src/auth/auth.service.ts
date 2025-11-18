@@ -51,10 +51,13 @@ export class AuthService {
     const passwordHash = await this.passwordHashService.hash(password);
 
     // Create user
-    const user = await this.usersService.create({
-      ...createUserDto,
+    const user = this.userRepository.create({
+      email,
+      username,
+      fullName: createUserDto.fullName,
       passwordHash,
     });
+    await this.userRepository.save(user);
 
     // Generate tokens
     const tokens = await this.generateTokens(user);
@@ -201,14 +204,18 @@ export class AuthService {
     });
 
     if (!existingUser) {
-      // Create new user
-      existingUser = await this.usersService.create({
+      // Create new user with random password for OAuth users
+      const passwordHash = await this.passwordHashService.hash(
+        Math.random().toString(36).slice(-8),
+      );
+      existingUser = this.userRepository.create({
         email: user.email,
-        username: user.email.split('@')[0],
+        username: user.email.split('@')[0] + '_' + Math.random().toString(36).slice(-6),
         fullName: user.name,
-        passwordHash: '', // OAuth users don't have passwords
+        passwordHash,
         emailVerified: true,
       });
+      await this.userRepository.save(existingUser);
     }
 
     // Update last login
@@ -232,6 +239,27 @@ export class AuthService {
 
     if (!user) {
       throw new UnauthorizedException('User not found');
+    }
+
+    return user;
+  }
+
+  async validateUser(email: string, password: string): Promise<any> {
+    const user = await this.userRepository.findOne({
+      where: { email, isActive: true },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    const isPasswordValid = await this.passwordHashService.compare(
+      password,
+      user.passwordHash,
+    );
+
+    if (!isPasswordValid) {
+      return null;
     }
 
     return user;
