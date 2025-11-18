@@ -1,179 +1,304 @@
 # Backend Structure Document
 
-This document outlines the backend architecture, hosting, and infrastructure for the **codeguide-starter** project. It uses plain language so anyone can understand how the backend is set up and how it supports the application.
+This document outlines the backend setup for the E-Commerce Admin Panel project. It covers architecture, database, APIs, hosting, infrastructure, security, and maintenance. Designed to be clear and accessible, it ensures anyone—technical or non-technical—can grasp how the backend works.
 
 ## 1. Backend Architecture
 
-- **Framework and Design Pattern**
-  - We use **Next.js API Routes** to handle all server-side logic. These routes live alongside the frontend code in the same repository, making development and deployment simpler.
-  - The backend follows a **layered pattern**:
-    1. **API Layer**: Receives requests (login, registration, data fetch).  
-    2. **Service Layer**: Contains the core business logic (user validation, password hashing).  
-    3. **Data Access Layer**: Talks to the database via a simple ORM (e.g., Prisma or TypeORM).
+**Overall Design**
+- We use NestJS (a Node.js framework) with TypeScript for a modular, maintainable structure.
+- Code is organized by feature modules (Auth, Users, Products, Orders, etc.), each containing:
+  - Controllers (handle incoming requests)
+  - Services (business logic)
+  - Repositories (database access via Drizzle ORM)
+- Dependency Injection (built into NestJS) ties everything together cleanly.
 
-- **Scalability**
-  - Stateless API routes can scale horizontally—new instances can spin up on demand.  
-  - We can add caching or a message queue (e.g., Redis or RabbitMQ) without changing the core code.
+**Design Patterns and Frameworks**
+- **Modular Pattern**: Each feature lives in its own folder, making it easy to add or update functionality without impacting unrelated parts.
+- **Repository Pattern**: Abstracts database operations and keeps SQL or query logic out of business code.
+- **MVC-like Structure**: Clear separation of controllers (entry points), services (logic) and repositories (data). 
+- **Drizzle ORM**: Provides type-safe database queries, migrations, and models.
 
-- **Maintainability**
-  - Code for each feature is grouped by route (authentication, dashboard).  
-  - A service layer separates complex logic from request handling.
-
-- **Performance**
-  - Lightweight Node.js handlers keep response times low.  
-  - Future use of database connection pooling and Redis for caching repeated queries.
+**Scalability, Maintainability, Performance**
+- **Scalability**: Packaged as Docker containers, it can scale horizontally behind a load balancer. Future modules or microservices can be added without major rewrites.
+- **Maintainability**: Feature modules and TypeScript typings help new developers onboard quickly. Clear boundaries reduce the risk of unintended side effects.
+- **Performance**: Efficient SQL queries via Drizzle, optional caching layers, and HTTP/2 support keep response times low.
 
 ## 2. Database Management
 
-- **Database Choice**
-  - We recommend **PostgreSQL** for structured data and reliable transactions.  
-  - In-memory caching can be added later with **Redis** for session tokens or frequently read data.
+**Database Technologies**
+- Type: Relational (SQL)
+- System: PostgreSQL
+- ORM: Drizzle ORM (TypeScript-first approach)
 
-- **Data Storage and Access**
-  - Use an ORM like **Prisma** or **TypeORM** to map JavaScript/TypeScript objects to database tables.
-  - Connection pooling ensures efficient use of database connections under load.
-  - Migrations track schema changes over time, keeping development, staging, and production in sync.
+**Data Structure and Access**
+- Data is normalized into tables representing Users, Products (Books), Categories, Orders, Order Items, Reviews, Addresses, Vouchers, and Auth Tokens.
+- Drizzle ORM handles migrations, schema definitions, and query building.
+- Read and write operations go through repository classes to ensure consistency and logging.
 
-- **Data Practices**
-  - Passwords are never stored in plain text—they are salted and hashed with **bcrypt** before saving.
-  - All outgoing data is typed and validated to prevent malformed records.
+**Data Practices**
+- **Migrations**: Version-controlled schema changes via Drizzle migration scripts.
+- **Backups**: Automated daily snapshots of the PostgreSQL database (e.g., AWS RDS snapshots).
+- **Connection Pooling**: Ensures efficient use of database connections under load.
 
 ## 3. Database Schema
 
-### Human-Readable Format
+Below is a human-readable summary of the main tables. Following that, you’ll find the SQL definitions for a PostgreSQL setup.
 
-- **Users**
-  - **id**: Unique identifier  
-  - **email**: User’s email address (unique)  
-  - **password_hash**: Securely hashed password  
-  - **created_at**: Account creation timestamp
+**Human-Friendly Table Overview**
+- **Users**: Admins and Customers with credentials and roles.
+- **Categories**: Product groupings.
+- **Products (Books)**: Items for sale, linked to a category.
+- **Orders**: Customer orders, with status and total amount.
+- **Order Items**: Line items within each order.
+- **Reviews**: Customer feedback tied to products.
+- **Addresses**: Shipping addresses for users.
+- **Vouchers**: Discount codes with validity windows.
+- **Password Reset Tokens**: One-time tokens for resetting passwords.
+- **OAuth Accounts**: Records of external provider logins (e.g., Google).
 
-- **Sessions**
-  - **id**: Unique session record  
-  - **user_id**: Links to a user  
-  - **token**: Random string for authentication  
-  - **expires_at**: When the token stops working  
-  - **created_at**: When the session was created
-
-- **DashboardItems** *(optional for dynamic data)*
-  - **id**: Unique record  
-  - **title**: Item title  
-  - **content**: Item details  
-  - **created_at**: When the item was added
-
-### SQL Schema (PostgreSQL)
+**SQL Schema (PostgreSQL)**
 ```sql
--- Users table
+-- Users
 CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
+  id UUID PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
+  name VARCHAR(100),
+  role VARCHAR(20) NOT NULL CHECK (role IN ('Admin', 'Customer')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Sessions table
-CREATE TABLE sessions (
-  id SERIAL PRIMARY KEY,
-  user_id INT REFERENCES users(id) ON DELETE CASCADE,
-  token VARCHAR(255) UNIQUE NOT NULL,
-  expires_at TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
+-- Categories
+CREATE TABLE categories (
+  id UUID PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Dashboard items table
-CREATE TABLE dashboard_items (
-  id SERIAL PRIMARY KEY,
-  title TEXT NOT NULL,
-  content TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
+-- Products (Books)
+CREATE TABLE products (
+  id UUID PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  price NUMERIC(10,2) NOT NULL,
+  stock INT NOT NULL,
+  category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-```  
+
+-- Orders
+CREATE TABLE orders (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  status VARCHAR(20) NOT NULL CHECK (status IN ('Pending','Processing','Shipped','Delivered','Cancelled')),
+  total_amount NUMERIC(10,2) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Order Items
+CREATE TABLE order_items (
+  id UUID PRIMARY KEY,
+  order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+  quantity INT NOT NULL,
+  price NUMERIC(10,2) NOT NULL
+);
+
+-- Reviews
+CREATE TABLE reviews (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Addresses
+CREATE TABLE addresses (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  street VARCHAR(255),
+  city VARCHAR(100),
+  state VARCHAR(100),
+  zip VARCHAR(20),
+  country VARCHAR(100),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Vouchers
+CREATE TABLE vouchers (
+  id UUID PRIMARY KEY,
+  code VARCHAR(50) UNIQUE NOT NULL,
+  discount_percentage NUMERIC(5,2) NOT NULL,
+  valid_from TIMESTAMP WITH TIME ZONE,
+  valid_to TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Password Reset Tokens
+CREATE TABLE password_reset_tokens (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  token VARCHAR(255) NOT NULL,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- OAuth Accounts
+CREATE TABLE oauth_accounts (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  provider VARCHAR(50) NOT NULL,
+  provider_account_id VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
 
 ## 4. API Design and Endpoints
 
-- **Approach**: We follow a **RESTful** style, grouping related endpoints under `/api` directories.
+We follow a RESTful approach using NestJS controllers. All endpoints live under `/api/v1/`.
 
-- **Key Endpoints**
-  - `POST /api/auth/register`  
-    • Accepts `{ email, password }`  
-    • Creates a new user and issues a session token  
-  - `POST /api/auth/login`  
-    • Accepts `{ email, password }`  
-    • Verifies credentials and returns a session token  
-  - `POST /api/auth/logout`  
-    • Invalidates the session token on the server  
-  - `GET /api/dashboard/data`  
-    • Requires a valid session  
-    • Returns user-specific data or dashboard items  
+**Authentication**
+- `POST /api/v1/auth/register` – Create a new user account.
+- `POST /api/v1/auth/login` – Log in and receive a JWT.
+- `POST /api/v1/auth/logout` – Invalidate the current session.
+- `POST /api/v1/auth/refresh-token` – Renew JWT.
+- `GET /api/v1/auth/google` – Redirect to Google OAuth.
+- `GET /api/v1/auth/google/callback` – Handle OAuth callback.
+- `POST /api/v1/auth/password-reset-request` – Send reset email.
+- `POST /api/v1/auth/password-reset` – Apply new password.
 
-- **Communication**
-  - Frontend sends JSON requests; backend replies with JSON and appropriate HTTP status codes.  
-  - Protected routes check for a valid session token (in cookies or Authorization header).
+**Users**
+- `GET /api/v1/users/me` – Get current user profile.
+- `GET /api/v1/users/:id` – Get a user by ID (Admin only).
+
+**Products (Books)**
+- `GET /api/v1/products` – List or search products.
+- `GET /api/v1/products/:id` – Get product details.
+- `POST /api/v1/products` – Create a new product (Admin).
+- `PUT /api/v1/products/:id` – Update a product (Admin).
+- `DELETE /api/v1/products/:id` – Remove a product (Admin).
+
+**Categories**
+- Same CRUD pattern under `/api/v1/categories`.
+
+**Orders**
+- `GET /api/v1/orders` – List orders (Admin or user’s own).
+- `GET /api/v1/orders/:id` – Get order details.
+- `POST /api/v1/orders` – Place a new order.
+- `PUT /api/v1/orders/:id` – Update order status (Admin).
+- `DELETE /api/v1/orders/:id` – Cancel an order (Admin or own order).
+
+**Order Items**
+- Handled inside Orders; no separate public endpoints.
+
+**Reviews**
+- `GET /api/v1/products/:id/reviews` – List reviews for a product.
+- `POST /api/v1/products/:id/reviews` – Submit a review (logged-in users).
+
+**Addresses**
+- Full CRUD under `/api/v1/addresses` (user-scoped).
+
+**Vouchers**
+- Full CRUD under `/api/v1/vouchers` (Admin).
+- `POST /api/v1/vouchers/:code/redeem` – Apply a voucher.
 
 ## 5. Hosting Solutions
 
-- **Cloud Provider**:  
-  - **Vercel** (recommended) offers seamless Next.js deployments, auto-scaling, and built-in CDN.  
-  - Alternatively, **Netlify** or any Node.js-capable host will work.
+**Cloud Provider**: AWS (Amazon Web Services)
 
-- **Benefits**
-  - **Reliability**: Global servers and failover across regions.  
-  - **Scalability**: Auto-scale serverless functions based on traffic.  
-  - **Cost-Effectiveness**: Pay-per-use model means low cost for small projects.
+**Services Used**
+- **ECR**: Stores Docker images for the NestJS API.
+- **ECS (Fargate)**: Runs containers without managing servers.
+- **RDS (PostgreSQL)**: Managed, backed-up database.
+- **S3 + CloudFront**: Hosts static assets, with CDN acceleration.
+- **Certificate Manager**: Auto-provisions TLS certificates.
+
+**Benefits**
+- **Reliability**: AWS SLAs, automatic failover for RDS.
+- **Scalability**: ECS auto-scales containers; database read replicas if needed.
+- **Cost-Effectiveness**: Pay-as-you-go pricing; scale down to zero in development.
 
 ## 6. Infrastructure Components
 
-- **Load Balancer**
-  - Provided by the hosting platform—distributes API requests across function instances.
+**Load Balancing**
+- Application Load Balancer (ALB) distributes incoming HTTP(s) traffic across ECS tasks.
 
-- **CDN (Content Delivery Network)**
-  - Vercel’s global edge network caches static assets (CSS, JS, images) for faster page loads.
+**Caching**
+- Optional Redis via ElastiCache for:
+  - Session storage or token revocation
+  - Frequently queried data (e.g., top-selling products)
 
-- **Caching**
-  - **Redis** (optional) for session storage or caching dashboard queries to reduce database load.
+**Content Delivery Network (CDN)**
+- CloudFront caches static assets from S3 globally, reducing latency for admin users.
 
-- **Object Storage**
-  - For file uploads or backups, integrate with AWS S3 or similar services.
+**Container Orchestration**
+- Docker images defined via `Dockerfile`.
+- Local development and CI use `docker-compose.yaml` to spin up API, database, and cache.
 
-- **Message Queue**
-  - In future, use **RabbitMQ** or **Kafka** for background tasks (e.g., email notifications).
+**Messaging & Background Jobs**
+- AWS SQS for async tasks (email sending, report generation).
 
 ## 7. Security Measures
 
-- **Authentication & Authorization**
-  - Passwords hashed with **bcrypt** and salted.  
-  - Session tokens stored in secure, HttpOnly cookies or Authorization headers.  
-  - Protected endpoints verify tokens before proceeding.
+**Authentication & Authorization**
+- JWT tokens stored in HTTP-only cookies (prevents XSS).
+- Role-based access control (Admin vs. Customer) enforced in NestJS guards.
+- OAuth 2.0 strategy (Google) via Passport.
 
-- **Data Encryption**
-  - **HTTPS/TLS** encrypts data in transit.  
-  - Database connections use SSL to encrypt data between the app and the database.
+**Data Encryption**
+- TLS everywhere (ALB enforces HTTPS).
+- At-rest encryption for RDS and ElastiCache.
 
-- **Input Validation**
-  - Every incoming request is validated (e.g., valid email format, password length) to prevent SQL injection or other attacks.
+**API Protection**
+- Rate limiting (e.g., 100 requests/minute/IP).
+- Helmet middleware for secure HTTP headers.
+- CORS policy restricted to known admin panel domains.
+- Input validation and sanitization via `class-validator` and `class-transformer`.
 
-- **Web Security Best Practices**
-  - Enable **CORS** policies to limit allowed origins.  
-  - Use **CSRF tokens** or same-site cookies to prevent cross-site requests.  
-  - Set secure headers with **Helmet** or a similar middleware.
+**Compliance**
+- GDPR-friendly data handling (users can delete their data).
+- Passwords hashed with bcrypt.
 
 ## 8. Monitoring and Maintenance
 
-- **Performance Monitoring**
-  - Integrate **Sentry** or **LogRocket** for real-time crash reporting and performance tracing.  
-  - Use Vercel’s built-in analytics to track request latencies and error rates.
+**Monitoring Tools**
+- **CloudWatch**: Logs, metrics, and alerts for CPU, memory, error rates.
+- **X-Ray**: Distributed tracing of API calls (identifies slow endpoints).
+- **Prometheus & Grafana** (optional): For custom application metrics.
 
-- **Logging**
-  - Structured logs (JSON) for all API requests and errors, shipped to a log management service like **Datadog** or **Logflare**.
+**Logging**
+- Structured logs via Winston or Pino, shipped to CloudWatch Logs.
 
-- **Health Checks**
-  - Define a `/health` endpoint that returns a 200 status if the service is up and the database is reachable.
+**Health Checks**
+- `/healthz` endpoint for container health.
+- ALB health checks restart unhealthy tasks automatically.
 
-- **Maintenance Strategies**
-  - Automated migrations run on deploy to keep the database schema up to date.  
-  - Scheduled dependency audits and security scans (e.g., `npm audit`).
-  - Regular backups of the database (daily or weekly depending on usage).
+**Maintenance Strategies**
+- Automated database backups and point-in-time restore.
+- Monthly dependency updates via Dependabot.
+- CI/CD pipeline (GitHub Actions) runs tests, builds, and deploys:
+  1. NestJS API image build and push to ECR
+  2. Terraform or CloudFormation stack updates
 
 ## 9. Conclusion and Overall Backend Summary
 
-The backend for **codeguide-starter** is built on Next.js API Routes and Node.js, paired with PostgreSQL for data and optional Redis for caching. It follows a clear layered architecture that keeps code easy to maintain and extend. With RESTful endpoints for authentication and data, secure practices like password hashing and HTTPS, and hosting on Vercel for scalability and global performance, this setup meets the project’s goals for a fast, secure, and developer-friendly foundation. Future enhancements—such as background job queues, advanced monitoring, or richer data models—can be added without disrupting the core structure.
+This backend structure is designed to deliver a robust, secure, and scalable foundation for your E-Commerce Admin Panel. By using NestJS modules, Drizzle ORM, and PostgreSQL, we guarantee maintainability and type safety. Hosting on AWS with ECS, RDS, and CloudFront ensures reliability and performance at scale. Comprehensive security practices, monitoring tools, and a clear CI/CD workflow round out a production-ready environment that aligns with your project’s goals and user needs.
+
+Unique strengths:
+- Modular NestJS architecture with DI
+- Type-safe database schema via Drizzle ORM
+- Docker-first deployment across development, staging, and production
+- AWS infrastructure optimized for cost, reliability, and scalability
+
+This setup empowers your team to build, monitor, and evolve the Admin Panel confidently, meeting both current requirements and future expansions.

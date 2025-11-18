@@ -1,90 +1,116 @@
 # Tech Stack Document
 
-This document explains the key technologies chosen for the **codeguide-starter** project. It’s written in everyday language so anyone—technical or not—can understand why each tool was picked and how it supports the application.
+This document outlines the key technologies chosen for the E-Commerce Admin Panel (adapted from the Bookstore Fullstack Starter). It explains in simple terms why each technology was selected and how it contributes to a fast, reliable, and user-friendly admin experience.
 
 ## 1. Frontend Technologies
-The frontend is everything the user sees and interacts with. For this project, we’ve used:
 
-- **Next.js (App Router)**
-  - A React framework that makes page routing, server-side rendering, and API routes very simple.
-  - Enhances user experience by pre-rendering pages on the server or at build time, leading to faster initial load.
-- **React 18**
-  - The underlying library for building user interfaces with reusable components.
-  - Provides a smooth, interactive experience thanks to its virtual DOM and modern hooks.
-- **TypeScript**
-  - A superset of JavaScript that adds types (labels for data).
-  - Helps catch errors early during development and makes the code easier to maintain.
-- **CSS (globals.css & theme.css)**
-  - **globals.css** applies base styles (fonts, colors, resets) across the entire app.
-  - **dashboard/theme.css** defines the look and feel specific to the dashboard area.
-  - This separation keeps styles organized and avoids accidental style conflicts.
+We built the Admin Panel interface with the following tools and libraries, focusing on speed, clarity, and ease of maintenance:
 
-By combining these tools, we have a clear structure (Next.js folders for pages and layouts), safer code (TypeScript), and flexible styling with vanilla CSS.
+- **Next.js (App Router)**  
+  A React framework that handles routing, server-side rendering, and static pages automatically. It speeds up page loads and simplifies data fetching.
+
+- **React 19 & TypeScript**  
+  React provides the building blocks for interactive UIs, while TypeScript adds type safety so we catch errors early and keep code predictable.
+
+- **Tailwind CSS**  
+  A utility-first CSS framework that lets us style components with small, reusable classes. It keeps styles consistent and reduces custom CSS bloat.
+
+- **shadcn/ui**  
+  A collection of ready-made UI components (buttons, forms, tables, cards) built on top of Tailwind. It accelerates development and ensures a polished, accessible look.
+
+- **Data Fetching with TanStack Query (or Axios)**  
+  A library for managing API calls, caching, and updates in React. It simplifies loading states, error handling, and keeps data in sync with the server.
+
+- **Next.js Server Components**  
+  These components fetch data on the server before sending HTML to the browser, leading to faster first loads and better SEO.
 
 ## 2. Backend Technologies
-The backend handles data, user accounts, and the logic behind the scenes. Our choices here are:
 
-- **Next.js API Routes**
-  - Allows us to write server-side code (`route.ts` files) alongside our frontend in the same project.
-  - Runs on Node.js, so we can handle requests like sign-up, sign-in, and data fetching in one place.
-- **Node.js Runtime**
-  - The JavaScript environment on the server that executes our API routes.
-- **bcrypt** (npm package)
-  - A library for hashing passwords securely before storing them.
-  - Ensures that even if someone got access to our data, raw passwords aren’t visible.
-- **(Optional) NextAuth.js or JWT**
-  - While this starter kit shows a custom authentication flow, it can easily integrate services like NextAuth.js for email-based login or JWT (JSON Web Tokens) for stateless sessions.
+Our backend is a standalone NestJS API that handles business logic, security, and data storage:
 
-These components work together to receive user credentials, verify or store them securely, manage sessions or tokens, and deliver protected data back to the frontend.
+- **NestJS (with Express under the hood)**  
+  A structured Node.js framework that uses decorators and modules. It makes it easy to organize routes, controllers, and services for authentication, user management, and CRUD operations.
+
+- **TypeScript**  
+  The same typed language runs on the server for consistency with the frontend and to minimize runtime errors.
+
+- **Drizzle ORM**  
+  A lightweight, schema-first library for defining database tables in TypeScript. We use it for type-safe queries and automatic migration generation.
+
+- **PostgreSQL**  
+  A reliable, open-source relational database. It stores all your data—users, books, categories, orders, and more—safely and allows complex queries for reports.
+
+- **Authentication & Authorization**  
+  - **Better Auth** (starter reference): A strategy for sign-up, sign-in, and password reset flows.  
+  - **JWT (JSON Web Tokens)**: Secure tokens issued on login, stored in http-only cookies, and sent with each request to prove identity.  
+  - **Google OAuth**: Allows admins to log in with their Google accounts, streamlining access without extra passwords.
+
+- **RESTful API Endpoints**  
+  Clear, predictable URLs (e.g., `GET /products`, `POST /orders`) that our Next.js frontend calls to fetch or update data.
 
 ## 3. Infrastructure and Deployment
-Infrastructure covers where and how we host the app, as well as how changes get delivered:
 
-- **Git & GitHub**
-  - Version control system (Git) and remote hosting (GitHub) keep track of all code changes and allow team collaboration.
-- **Vercel (or Netlify)**
-  - A popular hosting service optimized for Next.js, with one-click deployments and global content delivery.
-  - Automatically rebuilds and deploys the site whenever code is pushed to the main branch.
-- **GitHub Actions (CI/CD)**
-  - Automates tasks like linting (ESLint), formatting (Prettier), and running any tests you add.
-  - Ensures that only clean, tested code goes live.
+To keep the project reliable, repeatable, and easy to deploy, we use:
 
-Together, these tools provide a reliable, scalable setup where every code change is tested and deployed quickly, with minimal manual work.
+- **Version Control with Git & GitHub**  
+  Tracks code changes, enables collaboration, and hosts pull-request workflows.
+
+- **Docker & Docker Compose**  
+  Containerizes each service (Next.js, NestJS API, PostgreSQL) so any developer can spin up the full stack locally with a single command.
+
+- **Continuous Integration / Continuous Deployment (CI/CD)**  
+  - **GitHub Actions**: Runs tests, builds Docker images, and deploys code automatically when changes are merged.  
+  - **Container Registry** (Docker Hub or GitHub Container Registry): Stores built images for consistent deployments.
+
+- **Hosting Platforms**  
+  - **Frontend (Next.js)**: Can be deployed to Vercel or Netlify for automatic scaling and global CDN.  
+  - **Backend (NestJS API)**: Hosted on a cloud VM or container service (e.g., AWS ECS, DigitalOcean App Platform).  
+  - **Database (PostgreSQL)**: Managed service like AWS RDS, DigitalOcean Managed DB, or a self-hosted container in production.
 
 ## 4. Third-Party Integrations
-While this starter kit is minimal by design, it already includes or can easily add:
 
-- **bcrypt**
-  - For secure password hashing (included as an npm dependency).
-- **NextAuth.js** (optional)
-  - A full-featured authentication library supporting email/password, OAuth, and more.
-- **Sentry or LogRocket** (optional)
-  - For real-time error tracking and performance monitoring in production.
+These services plug into our system to extend functionality without reinventing the wheel:
 
-These integrations help extend the app’s capabilities without building every feature from scratch.
+- **Email Service (e.g., SendGrid or Mailgun)**  
+  Sends password-reset links and account-verification emails securely.
+
+- **OAuth Providers**  
+  - **Google OAuth**: Lets admins sign in with their Google accounts.  
+  - (Optional) Other providers like GitHub or Facebook can be added later.
+
+- **Analytics & Error Tracking**  
+  - **Google Analytics or Plausible**: Tracks page views and user behavior in the admin panel.  
+  - **Sentry**: Captures runtime errors and performance bottlenecks for quick debugging.
 
 ## 5. Security and Performance Considerations
-We’ve baked in several measures to keep users safe and the app running smoothly:
 
-Security:
-- Passwords are never stored in plain text—bcrypt hashes them with a random salt.
-- API routes can implement CSRF protection and input validation to block malicious requests.
-- Session tokens or cookies are marked secure and HttpOnly to prevent theft via JavaScript.
+We’ve built in several safeguards and optimizations to keep data safe and the interface responsive:
 
-Performance:
-- Server-side rendering (SSR) and static site generation (SSG) in Next.js deliver pages faster.
-- Code splitting and lazy-loaded components ensure users only download what they need.
-- Global CSS and theme files are small and cached by the browser for quick repeat visits.
+- **Authentication & Role-Based Access**  
+  - Users are issued JWTs stored in http-only cookies (not accessible by JavaScript) to prevent XSS attacks.  
+  - The backend checks roles (Admin vs. Customer) on every request to protected routes.
 
-These strategies work together to give users a fast, secure experience every time.
+- **Data Validation & Sanitization**  
+  - NestJS uses pipes and DTOs (data transfer objects) to validate and clean incoming data.  
+  - Prevents injection attacks and ensures data consistency.
+
+- **HTTPS Everywhere**  
+  All services run over SSL/TLS to encrypt data in transit.
+
+- **Performance Optimizations**  
+  - **Server-Side Rendering & Caching** in Next.js for faster initial loads.  
+  - **Code Splitting & Lazy Loading** of components so the browser only downloads what’s needed.  
+  - **Database Indexing & Query Optimization** via Drizzle ORM to speed up data lookups.  
+  - **CDN** for static assets (images, CSS, JS) to serve them from a location close to the user.
 
 ## 6. Conclusion and Overall Tech Stack Summary
-In building **codeguide-starter**, we chose technologies that:
 
-- Align with modern web standards (Next.js, React, TypeScript).
-- Provide a clear, file-based project structure for rapid onboarding.
-- Offer built-in support for server-side rendering, API routes, and static assets.
-- Emphasize security through password hashing, session management, and safe defaults.
-- Enable easy scaling and future enhancements via modular code and optional integrations.
+This Admin Panel stack was chosen to balance developer productivity, application performance, and security:
 
-This stack strikes a balance between simplicity for newcomers and flexibility for experienced teams. It accelerates development of a secure authentication flow and a polished dashboard, while leaving room to plug in databases, test suites, and advanced features as the project grows.
+- **Next.js + React 19 + TypeScript** for a modern, type-safe frontend with fast server-rendered pages.  
+- **Tailwind CSS + shadcn/ui** for a consistent, accessible, and easily customizable design system.  
+- **NestJS + Drizzle ORM + PostgreSQL** for a scalable, type-safe backend that cleanly separates logic, data models, and database migrations.  
+- **Docker, GitHub Actions, and Cloud Hosting** for smooth local development, automated testing, and reliable production deployments.  
+- **JWT, OAuth, HTTPS, and Validation** to protect user data and restrict access to authorized Admins only.
+
+Together, these choices ensure that the Admin Panel is robust, easy to extend, and delivers a fluid, secure experience for your e-commerce administrators.

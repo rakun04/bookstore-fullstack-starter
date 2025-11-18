@@ -1,59 +1,196 @@
-# Codeguide Starter Fullstack
+# 📚 E-Commerce Book Store Platform
 
-A modern web application starter template built with Next.js 15, featuring authentication, database integration, and dark mode support.
+A comprehensive, full-stack E-Commerce platform for selling books online with modern technologies and best practices.
 
-## Tech Stack
+## 🏗️ Architecture Overview
 
-- **Framework:** [Next.js 15](https://nextjs.org/) (App Router with Turbopack)
-- **Language:** TypeScript
-- **Authentication:** [Better Auth](https://better-auth.com/)
-- **Database:** [Drizzle ORM](https://orm.drizzle.team/) with PostgreSQL
-- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
-- **UI Components:** [shadcn/ui](https://ui.shadcn.com/) (New York style)
-- **Theme System:** [next-themes](https://github.com/pacocoursey/next-themes)
-- **Icons:** [Lucide React](https://lucide.dev/)
+This project implements a microservices-based E-Commerce platform with the following technology stack:
 
-## Prerequisites
+### 📱 Mobile Frontend
+- **Flutter** 3.x with Riverpod state management
+- Cross-platform (iOS, Android, Web)
+- Modern UI with responsive design
 
-Before you begin, ensure you have the following:
-- Node.js 18+ installed
-- Docker and Docker Compose (for database setup)
-- Generated project documents from [CodeGuide](https://codeguide.dev/) for best development experience
+### 🖥️ Admin Panel
+- **Next.js 14** with App Router
+- **shadcn/ui** components with Tailwind CSS
+- Real-time analytics and management
 
-## Getting Started
+### 🔧 Backend API
+- **NestJS** with TypeScript
+- PostgreSQL database with TypeORM
+- Redis caching and session management
+- JWT authentication with OAuth support
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd codeguide-starter-fullstack
-   ```
+### 🗄️ Database & Storage
+- PostgreSQL 15+ for primary data
+- Redis for caching
+- AWS S3 / MinIO for file storage
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   # or
-   yarn install
-   # or
-   pnpm install
-   ```
+### 🔗 External Integrations
+- **Payment**: Midtrans / Xendit
+- **Email**: AWS SES / SendGrid
+- **SMS**: Twilio
+- **Shipping**: RajaOngkir API
 
-3. **Environment Variables Setup**
-   - Copy the `.env.example` file to `.env`:
-     ```bash
-     cp .env.example .env
-     ```
-   - The default values work with Docker setup, modify as needed
+## 🚀 Features
 
-4. **Start the development server**
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   # or
-   pnpm dev
-   ```
+### 🔐 Authentication & User Management
+- ✅ User registration & login with JWT
+- ✅ Google OAuth integration
+- ✅ Multi-address management
+- ✅ Role-based access control (Admin/Customer)
+- ✅ Password reset functionality
 
-5. **Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.**
+### 📚 Catalog & Product Management
+- ✅ Advanced book CRUD operations
+- ✅ Category management with hierarchy
+- ✅ Search and filtering capabilities
+- ✅ Multiple sorting options
+- ✅ Stock management
+- ✅ Discount and pricing system
+
+### 🛒 Shopping Cart & Checkout
+- ✅ Persistent shopping cart
+- ✅ Voucher and discount system
+- ✅ Multiple payment methods (QRIS, VA, E-Wallet)
+- ✅ Shipping cost calculation
+- ✅ Order management
+
+### 📦 Order Management
+- ✅ Complete order lifecycle tracking
+- ✅ Admin order management
+- ✅ Shipping integration
+- ✅ Invoice generation (PDF)
+- ✅ Real-time order status updates
+
+### ⭐ Rating & Review System
+- ✅ Customer reviews and ratings
+- ✅ Verified purchase protection
+- ✅ Review moderation
+- ✅ Analytics and reporting
+
+### 🎯 Marketing Features
+- ✅ Banner management
+- ✅ Flash sale system
+- ✅ Newsletter subscription
+- ✅ Promotion management
+
+### 📊 Analytics & Reporting
+- ✅ Sales analytics dashboard
+- ✅ Customer behavior tracking
+- ✅ Inventory reports
+- ✅ Financial reporting
+
+## 📁 Project Structure
+
+```
+bookstore-platform/
+├── backend/                 # NestJS API
+│   ├── src/
+│   │   ├── auth/           # Authentication module
+│   │   ├── users/          # User management
+│   │   ├── books/          # Book catalog
+│   │   ├── categories/     # Category management
+│   │   ├── cart/           # Shopping cart
+│   │   ├── orders/         # Order management
+│   │   ├── payments/       # Payment processing
+│   │   ├── reviews/        # Review system
+│   │   ├── admin/          # Admin features
+│   │   └── common/         # Shared utilities
+│   ├── test/               # Test files
+│   └── migrations/         # Database migrations
+├── frontend/
+│   └── admin/              # Next.js admin panel
+│       ├── src/
+│       │   ├── app/        # App router pages
+│       │   ├── components/ # Reusable components
+│       │   ├── lib/        # Utilities and configs
+│       │   └── types/      # TypeScript types
+│       └── public/         # Static assets
+├── mobile/                 # Flutter mobile app
+│   ├── lib/
+│   │   ├── core/           # Core functionality
+│   │   ├── data/           # Data layer
+│   │   ├── features/       # Feature modules
+│   │   ├── presentation/   # UI components
+│   │   └── utils/          # Utilities
+│   ├── test/               # Flutter tests
+│   └── assets/             # Mobile assets
+├── documentation/          # Project documentation
+│   ├── architecture_document.md
+│   ├── database_schema.md
+│   ├── api_endpoints.md
+│   ├── business_flows.md
+│   └── cicd_deployment.md
+└── docker-compose.yml      # Local development setup
+```
+
+## 🛠️ Quick Start
+
+### Prerequisites
+- Node.js 18+
+- Flutter 3.16+
+- Docker & Docker Compose
+- PostgreSQL 15+
+- Redis 7+
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/your-org/bookstore-platform.git
+cd bookstore-platform
+```
+
+### 2. Environment Setup
+```bash
+# Backend environment
+cp backend/.env.example backend/.env
+# Configure your database and API keys
+
+# Frontend environment
+cp frontend/admin/.env.example frontend/admin/.env
+# Configure API URLs and authentication
+
+# Mobile environment
+cp mobile/.env.example mobile/.env
+# Configure API endpoints and feature flags
+```
+
+### 3. Local Development with Docker
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+### 4. Manual Setup
+
+#### Backend
+```bash
+cd backend
+npm install
+npm run migration:run
+npm run start:dev
+```
+
+#### Frontend
+```bash
+cd frontend/admin
+npm install
+npm run dev
+```
+
+#### Mobile
+```bash
+cd mobile
+flutter pub get
+flutter run
+```
 
 ## Configuration
 
